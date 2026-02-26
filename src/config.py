@@ -32,6 +32,24 @@ BUSINESS_PARQUET_PATH = PROCESSED_DATA_DIR / "business_restaurants.parquet"
 REVIEW_PARQUET_PATH = PROCESSED_DATA_DIR / "review_restaurants.parquet"
 USER_PARQUET_PATH = PROCESSED_DATA_DIR / "user_restaurants.parquet"
 
+# Simulated ad-impression outputs.
+AD_IMPRESSIONS_PARQUET_PATH = PROCESSED_DATA_DIR / "ad_impressions.parquet"
+AD_TRAIN_PARQUET_PATH = PROCESSED_DATA_DIR / "ad_impressions_train.parquet"
+AD_VAL_PARQUET_PATH = PROCESSED_DATA_DIR / "ad_impressions_val.parquet"
+AD_TEST_PARQUET_PATH = PROCESSED_DATA_DIR / "ad_impressions_test.parquet"
+AD_SCHEMA_PATH = PROCESSED_DATA_DIR / "ad_impressions_schema.json"
+
+# Ground-truth coefficients used in synthetic click simulation.
+AD_SIM_TRUE_COEFFICIENTS = {
+    "intercept": None,  # Calibrated at runtime to hit target CTR.
+    "cuisine_match": 0.5,
+    "norm_rating": 0.3,
+    "inv_position": 0.8,
+    "price_distance": -0.2,
+    "is_evening": 0.1,
+    "noise_std": 0.3,
+}
+
 
 @dataclass(frozen=True)
 class HyperParams:
