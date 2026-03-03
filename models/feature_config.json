@@ -1,0 +1,80 @@
+{
+  "restaurant_city": {
+    "name": "restaurant_city",
+    "type": "sparse",
+    "vocab_size": 859,
+    "embedding_dim": 8
+  },
+  "restaurant_cuisine": {
+    "name": "restaurant_cuisine",
+    "type": "sparse",
+    "vocab_size": 321,
+    "embedding_dim": 8
+  },
+  "campaign_id": {
+    "name": "campaign_id",
+    "type": "sparse",
+    "vocab_size": 100,
+    "embedding_dim": 8
+  },
+  "campaign_city": {
+    "name": "campaign_city",
+    "type": "sparse",
+    "vocab_size": 80,
+    "embedding_dim": 8
+  },
+  "campaign_cuisine": {
+    "name": "campaign_cuisine",
+    "type": "sparse",
+    "vocab_size": 55,
+    "embedding_dim": 8
+  },
+  "time_of_day": {
+    "name": "time_of_day",
+    "type": "sparse",
+    "vocab_size": 5,
+    "embedding_dim": 8
+  },
+  "day_of_week": {
+    "name": "day_of_week",
+    "type": "sparse",
+    "vocab_size": 7,
+    "embedding_dim": 8
+  },
+  "ad_position": {
+    "name": "ad_position",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "bid_amount": {
+    "name": "bid_amount",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "norm_rating": {
+    "name": "norm_rating",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "price_distance": {
+    "name": "price_distance",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "is_evening": {
+    "name": "is_evening",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "is_weekend": {
+    "name": "is_weekend",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  }
+}
