@@ -463,6 +463,65 @@ class FeatureEngineer:
         }
         return config
 
+    def enrich_ad_impressions(self, ad_df: pd.DataFrame) -> pd.DataFrame:
+        """Merge FeatureEngineer's business/user features into ad impression data.
+
+        Bridges the review-based pipeline with the ad pipeline by looking up
+        precomputed features for each (business_id, user_id) pair. Features
+        already present in *ad_df* are preserved; only missing ones are added.
+        """
+        if not self.is_fitted:
+            raise RuntimeError("FeatureEngineer must be fitted before enrich_ad_impressions().")
+
+        out = ad_df.copy()
+        out["business_id"] = out["business_id"].astype(str)
+        out["user_id"] = out["user_id"].astype(str)
+
+        biz_rows: list[dict[str, Any]] = []
+        for bid in out["business_id"]:
+            feat = self.business_feature_map.get(bid, {})
+            biz_rows.append({
+                "fe_rating_vs_city_avg": feat.get("rating_vs_city_avg", 0.0),
+                "fe_restaurant_log_review_count": feat.get("log_review_count", 0.0),
+                "fe_price_range": feat.get("price_range", 2.0),
+                "fe_price_missing": feat.get("price_missing", 1),
+                "fe_primary_cuisine_idx": self.cuisine_to_idx.get(
+                    feat.get("primary_cuisine", "Other"),
+                    self.cuisine_to_idx.get("Other", 0),
+                ),
+                "fe_city_idx": self.city_to_idx.get(
+                    feat.get("city", "Unknown"),
+                    self.city_to_idx.get("Unknown", 0),
+                ),
+            })
+        biz_feat_df = pd.DataFrame(biz_rows, index=out.index)
+
+        user_rows: list[dict[str, Any]] = []
+        for uid in out["user_id"]:
+            feat = self.user_feature_map.get(uid, {})
+            top_pref = feat.get("top_cuisine_preference")
+            if top_pref and top_pref in self.top_cuisine_to_idx:
+                pref_idx = self.top_cuisine_to_idx[top_pref]
+            else:
+                pref_idx = self.top_cuisine_to_idx.get("Other", 0)
+
+            user_rows.append({
+                "fe_avg_rating_given": feat.get("avg_rating_given", 3.5),
+                "fe_user_log_review_count": feat.get("log_review_count", 0.0),
+                "fe_account_age_years": feat.get("account_age_years", 0.0),
+                "fe_top_cuisine_preference_idx": pref_idx,
+            })
+        user_feat_df = pd.DataFrame(user_rows, index=out.index)
+
+        for col in biz_feat_df.columns:
+            if col not in out.columns:
+                out[col] = biz_feat_df[col]
+        for col in user_feat_df.columns:
+            if col not in out.columns:
+                out[col] = user_feat_df[col]
+
+        return out
+
     def save(self, path: str | Path) -> Path:
         """Persist fitted pipeline as pickle."""
         if not self.is_fitted:

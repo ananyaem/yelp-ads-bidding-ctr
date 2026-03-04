@@ -7,11 +7,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
-import torch
 from sklearn.linear_model import LogisticRegression
-from torch.utils.data import DataLoader
+
+if TYPE_CHECKING:
+    import torch
+    from torch.utils.data import DataLoader
 
 
 @dataclass
@@ -126,12 +130,13 @@ class PositionDebiaser:
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model: Any,
         feature_config: dict[str, dict[str, Any]],
         scaler: PlattScaler | None = None,
         neutral_position: float = 1.0,
-        device: torch.device | str | None = None,
+        device: Any = None,
     ) -> None:
+        import torch
         self.model = model
         self.feature_config = feature_config
         self.scaler = scaler
@@ -153,6 +158,8 @@ class PositionDebiaser:
         calibrate: bool = True,
         batch_size: int = 2048,
     ) -> np.ndarray:
+        import torch
+        from torch.utils.data import DataLoader
         from src.training.trainer import AdClickDataset, _collate_batch
 
         infer_df = feature_df.copy()

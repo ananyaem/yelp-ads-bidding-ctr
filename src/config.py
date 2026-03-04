@@ -47,7 +47,11 @@ AD_SIM_TRUE_COEFFICIENTS = {
     "inv_position": 3.0,
     "price_distance": -0.8,
     "is_evening": 0.5,
-    "noise_std": 0.15,
+    "city_match": 1.0,
+    "log_review_count": 0.6,
+    "user_activity_bias_std": 0.3,
+    "cuisine_evening_interaction": 0.8,
+    "noise_std": 0.5,
 }
 
 
