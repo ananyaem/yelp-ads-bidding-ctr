@@ -30,6 +30,7 @@ def infer_feature_config(frame: pd.DataFrame, embedding_dim: int) -> dict[str, d
         "bid_amount",
         "norm_rating",
         "price_distance",
+        "cuisine_match",
         "is_evening",
         "is_weekend",
     ]

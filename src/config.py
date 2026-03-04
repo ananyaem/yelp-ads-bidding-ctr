@@ -42,12 +42,12 @@ AD_SCHEMA_PATH = PROCESSED_DATA_DIR / "ad_impressions_schema.json"
 # Ground-truth coefficients used in synthetic click simulation.
 AD_SIM_TRUE_COEFFICIENTS = {
     "intercept": None,  # Calibrated at runtime to hit target CTR.
-    "cuisine_match": 0.5,
-    "norm_rating": 0.3,
-    "inv_position": 0.8,
-    "price_distance": -0.2,
-    "is_evening": 0.1,
-    "noise_std": 0.3,
+    "cuisine_match": 2.0,
+    "norm_rating": 1.2,
+    "inv_position": 3.0,
+    "price_distance": -0.8,
+    "is_evening": 0.5,
+    "noise_std": 0.15,
 }
 
 
