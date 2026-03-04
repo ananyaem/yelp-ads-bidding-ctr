@@ -15,6 +15,7 @@ from sklearn.utils import check_random_state
 from torch.utils.data import DataLoader, Dataset
 
 from src.config import MODELS_DIR
+from src.models.calibration import PlattScaler
 from src.models.deepfm import DeepFM
 
 
@@ -133,6 +134,7 @@ class Trainer:
         self.best_epoch = -1
         self._calibrator_a: float = 1.0
         self._calibrator_b: float = 0.0
+        self.platt_scaler = PlattScaler()
         self._position_dense_idx = self._find_dense_position_idx()
 
     def _find_dense_position_idx(self) -> int | None:
@@ -284,10 +286,14 @@ class Trainer:
                 print(f"Early stopping triggered at epoch {epoch}.")
                 break
 
-        # Restore best checkpoint and fit calibrator on validation set.
+        # Restore best checkpoint and fit calibrators on validation set.
         self.load_checkpoint(self.checkpoint_path)
         _, val_y_best, val_prob_best = self._epoch_pass(val_loader, train=False)
         self._fit_calibrator(val_y_best, val_prob_best)
+        self.platt_scaler.fit(val_y_best, val_prob_best)
+
+        scaler_path = self.checkpoint_path.parent / "platt_scaler.pkl"
+        self.platt_scaler.save(scaler_path)
 
         self.history_path.parent.mkdir(parents=True, exist_ok=True)
         with self.history_path.open("w", encoding="utf-8") as f:
