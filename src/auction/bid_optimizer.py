@@ -15,18 +15,18 @@ logger = logging.getLogger(__name__)
 class BudgetPacer:
     """Exponential-smoothing budget pacer.
 
-    Distributes a daily budget across time slots and adjusts a
-    *pacing_multiplier* so cumulative spend tracks the ideal linear
-    spend curve.
+    The daily budget is spread evenly across *n_slots* time slots
+    (linear cumulative target: ``daily_budget * time_elapsed`` when
+    *time_elapsed* is the fraction of the day in ``[0, 1]``).
 
     Parameters
     ----------
     daily_budget : float
         Total budget for the day.
     n_slots : int
-        Number of time slots the budget is spread across.
+        Number of time slots (horizon length); must be at least 1.
     alpha : float
-        Smoothing factor for exponential-smoothing updates.
+        Smoothing weight for exponential smoothing (default 0.3).
     """
 
     MIN_MULTIPLIER = 0.1
@@ -52,19 +52,24 @@ class BudgetPacer:
         self._total_spent += amount
 
     def update(self, actual_spend: float, time_elapsed: float) -> float:
-        """Adjust *pacing_multiplier* via exponential smoothing.
+        """Adjust *pacing_multiplier* with exponential smoothing (``alpha``).
 
-        Uses a forward-looking formulation: compares the *required*
-        spend rate (remaining budget / remaining time) against the
-        ideal rate, so the pacer naturally accelerates when behind
-        schedule and brakes when ahead.
+        Linear budget target over the day implies uniform spend rate
+        ``daily_budget`` per unit time when *time_elapsed* is in ``[0,1]``.
+        Compares required finish rate ``remaining_budget / remaining_time``
+        to that ideal: underspending raises the multiplier, overspending
+        lowers it. Then::
+
+            pacing <- alpha * (pacing * rate_ratio) + (1 - alpha) * pacing
+
+        clamped to [:attr:`MIN_MULTIPLIER`, :attr:`MAX_MULTIPLIER`].
 
         Parameters
         ----------
         actual_spend : float
             Cumulative spend observed so far.
         time_elapsed : float
-            Fraction of total time elapsed, in ``(0, 1]``.
+            Fraction of the pacing horizon elapsed, in ``(0, 1]``.
 
         Returns
         -------
@@ -78,13 +83,13 @@ class BudgetPacer:
         remaining_time = max(1.0 - time_elapsed, 1e-6)
 
         required_rate = remaining_budget / remaining_time
-        ideal_rate = self.daily_budget  # spend-per-unit-time at uniform pace
+        ideal_rate = self.daily_budget
 
         rate_ratio = required_rate / ideal_rate
         target = self.pacing_multiplier * rate_ratio
 
         self.pacing_multiplier = (
-            self.alpha * target + (1 - self.alpha) * self.pacing_multiplier
+            self.alpha * target + (1.0 - self.alpha) * self.pacing_multiplier
         )
         self.pacing_multiplier = float(
             np.clip(self.pacing_multiplier, self.MIN_MULTIPLIER, self.MAX_MULTIPLIER)
@@ -93,10 +98,10 @@ class BudgetPacer:
 
 
 class OptimalBidder:
-    """Pacing-aware optimal bidder.
+    """Pacing-aware bid from expected value.
 
-    ``bid = value_per_click * predicted_ctr * pacing_multiplier``,
-    floored at *min_bid* and capped at *max_bid*.
+    ``optimal_bid = value_per_click * predicted_ctr * pacing_multiplier``,
+    floored at *min_bid* (default 0.01) and capped at *max_bid* (default 10.0).
     """
 
     def __init__(
@@ -118,12 +123,12 @@ class OptimalBidder:
 
 
 class CampaignSimulator:
-    """Simulate a single campaign competing in GSP auctions over a day.
+    """Simulate one campaign over many GSP auction rounds.
 
-    Each *round* represents a time slot (e.g. one hour of a 24-hour
-    day).  Within each round the campaign participates in
-    *impressions_per_round* independent auctions.  After every round
-    the :class:`BudgetPacer` re-calibrates the pacing multiplier.
+    Each row of the returned DataFrame is one round. Tracked fields
+    include *budget_utilization*, *actual_CPA*, *impression_share*,
+    *total_clicks*, and *total_spend* (cumulative), suitable for
+    plotting trajectories.
 
     Parameters
     ----------

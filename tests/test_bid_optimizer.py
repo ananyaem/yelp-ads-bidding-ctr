@@ -42,6 +42,17 @@ class TestBudgetPacer:
             pacer2.update(actual_spend=200.0, time_elapsed=0.1)
         assert pacer2.pacing_multiplier >= BudgetPacer.MIN_MULTIPLIER
 
+    def test_pacing_multiplier_always_in_0_1_to_3_0(self) -> None:
+        """Acceptance: multiplier stays in [0.1, 3.0] under random spend paths."""
+        rng = np.random.default_rng(0)
+        pacer = BudgetPacer(daily_budget=100.0, n_slots=24, alpha=0.3)
+        spend = 0.0
+        for step in range(1, 25):
+            t = step / 24
+            spend += float(rng.uniform(0.0, 8.0))
+            pacer.update(actual_spend=spend, time_elapsed=t)
+            assert BudgetPacer.MIN_MULTIPLIER <= pacer.pacing_multiplier <= BudgetPacer.MAX_MULTIPLIER
+
     def test_underspend_increases_multiplier(self) -> None:
         pacer = BudgetPacer(daily_budget=100.0, n_slots=10)
         pm_before = pacer.pacing_multiplier
@@ -109,6 +120,24 @@ class TestOptimalBidder:
             for ctr in [0.0, -0.1, 0.5]:
                 bid = bidder.compute_bid(vpc, ctr)
                 assert bid >= 0.0
+
+    def test_optimal_bid_non_negative_and_capped(self) -> None:
+        """Acceptance: bids are >= 0 and never above max_bid."""
+        bidder = OptimalBidder(min_bid=0.01, max_bid=10.0)
+        rng = np.random.default_rng(1)
+        for _ in range(200):
+            vpc = float(rng.uniform(-2.0, 20.0))
+            ctr = float(rng.uniform(-0.1, 0.5))
+            pm = float(rng.uniform(0.05, 5.0))
+            bid = bidder.compute_bid(vpc, ctr, pm)
+            assert 0.0 <= bid <= 10.0
+
+    def test_compute_bid_matches_value_formula(self) -> None:
+        bidder = OptimalBidder()
+        bid = bidder.compute_bid(
+            value_per_click=4.0, predicted_ctr=0.12, pacing_multiplier=1.5
+        )
+        assert bid == pytest.approx(4.0 * 0.12 * 1.5)
 
     def test_bid_monotonic_in_ctr(self) -> None:
         bidder = OptimalBidder()
