@@ -5,6 +5,7 @@ scikit-learn
 plotly
 streamlit
 onnx
+onnxruntime
 tqdm
 pydantic
 pyarrow
