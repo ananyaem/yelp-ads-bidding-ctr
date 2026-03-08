@@ -10,40 +10,14 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-import torch
 
+from src.inference.demo_assets import write_demo_artifacts
 from src.inference.pipeline import InferencePipeline
-from src.models.calibration import PlattScaler
-from src.models.deepfm import DeepFM
-from src.models.export_onnx import export_deepfm_onnx, verify_onnx_matches_pytorch
-
-
-def _tiny_ad_feature_config() -> dict:
-    return {
-        "cuisine": {"name": "cuisine", "type": "sparse", "vocab_size": 10, "embedding_dim": 8},
-        "city": {"name": "city", "type": "sparse", "vocab_size": 8, "embedding_dim": 8},
-        "ad_position": {"name": "ad_position", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "bid_amount": {"name": "bid_amount", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "norm_rating": {"name": "norm_rating", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-    }
+from src.models.export_onnx import verify_onnx_matches_pytorch
 
 
 def _save_demo_bundle(root: Path) -> tuple[Path, Path, Path]:
-    fc = _tiny_ad_feature_config()
-    model = DeepFM(fc, dnn_layers=[32, 16], dropout=0.1)
-    torch.manual_seed(1)
-    ckpt = root / "m.pt"
-    torch.save(
-        {"model_state_dict": model.state_dict(), "feature_config": fc, "best_val_auc": 0.5, "best_epoch": 1},
-        ckpt,
-    )
-    platt = PlattScaler()
-    platt.fit(np.array([0.0, 1.0]), np.array([0.25, 0.75]))
-    pp = root / "platt.pkl"
-    platt.save(pp)
-    onnx_p = root / "m.onnx"
-    export_deepfm_onnx(ckpt, onnx_p)
-    return ckpt, pp, onnx_p
+    return write_demo_artifacts(root)
 
 
 def test_onnx_matches_pytorch_atol():
