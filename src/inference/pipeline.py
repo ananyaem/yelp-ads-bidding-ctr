@@ -59,7 +59,11 @@ class InferencePipeline:
         self.platt_path = Path(platt_path).resolve() if platt_path is not None else None
         self.onnx_path = Path(onnx_path).resolve() if onnx_path is not None else None
         self.use_onnx = bool(use_onnx)
-        self.device = torch.device(device) if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = (
+            torch.device(device)
+            if device
+            else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        )
         self.auction = auction or GSPAuction()
         self._dnn_override = dnn_layers
         self._dropout = dropout if dropout is not None else DEFAULT_HPARAMS.dropout
@@ -89,8 +93,10 @@ class InferencePipeline:
             ckpt = torch.load(self.model_path, map_location="cpu")
         self.feature_config = ckpt["feature_config"]
         inferred = _infer_dnn_layer_sizes(ckpt["model_state_dict"])
-        layers = self._dnn_override if self._dnn_override is not None else (
-            inferred if inferred else list(DEFAULT_HPARAMS.dnn_layers)
+        layers = (
+            self._dnn_override
+            if self._dnn_override is not None
+            else (inferred if inferred else list(DEFAULT_HPARAMS.dnn_layers))
         )
         self.model = DeepFM(self.feature_config, dnn_layers=layers, dropout=self._dropout)
         self.model.load_state_dict(ckpt["model_state_dict"])
@@ -200,7 +206,9 @@ class InferencePipeline:
             infer_df["ad_position"] = 1.0
 
         ds = AdClickDataset(infer_df, self.feature_config)
-        loader = DataLoader(ds, batch_size=min(512, len(ds)), shuffle=False, collate_fn=_collate_batch)
+        loader = DataLoader(
+            ds, batch_size=min(512, len(ds)), shuffle=False, collate_fn=_collate_batch
+        )
         probs: list[np.ndarray] = []
         with torch.no_grad():
             for batch in loader:

@@ -112,7 +112,9 @@ def main() -> None:
     )
 
     history = trainer.fit(train_df, val_df)
-    print(f"Training complete. Best epoch={trainer.best_epoch}, best val AUC={trainer.best_val_auc:.5f}")
+    print(
+        f"Training complete. Best epoch={trainer.best_epoch}, best val AUC={trainer.best_val_auc:.5f}"
+    )
     print(f"History saved to {MODELS_DIR / 'training_history.json'}")
     print(f"Checkpoint saved to {MODELS_DIR / 'best_deepfm.pt'}")
 
@@ -131,7 +133,9 @@ def main() -> None:
 
     # Save debiased predictions (position fixed to 1).
     pred = trainer.predict(test_df, calibrate=True)
-    out = test_df[["timestamp", "user_id", "business_id", "campaign_id", "ad_position", "click"]].copy()
+    out = test_df[
+        ["timestamp", "user_id", "business_id", "campaign_id", "ad_position", "click"]
+    ].copy()
     out["debiased_pred_proba"] = pred
     out.to_parquet(MODELS_DIR / "test_predictions_debiased.parquet", index=False)
 

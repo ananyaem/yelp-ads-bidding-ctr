@@ -39,7 +39,9 @@ class EmbeddingLayer(nn.Module):
 
         unique_dims = set(self.embedding_dims.values())
         if len(unique_dims) > 1:
-            raise ValueError(f"All sparse features must share embedding_dim for FM; got {unique_dims}")
+            raise ValueError(
+                f"All sparse features must share embedding_dim for FM; got {unique_dims}"
+            )
 
     def _clamp_indices(self, indices: torch.Tensor, feature_name: str) -> torch.Tensor:
         max_idx = self.vocab_sizes[feature_name] - 1
@@ -76,7 +78,9 @@ class EmbeddingLayer(nn.Module):
 class FMLayer(nn.Module):
     """Second-order FM interactions with O(k*n) complexity."""
 
-    def forward(self, embeddings: torch.Tensor, feature_values: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, embeddings: torch.Tensor, feature_values: torch.Tensor | None = None
+    ) -> torch.Tensor:
         # embeddings: [B, F, D]
         if feature_values is not None:
             # feature_values expected shape [B, F] or [B, F, 1].
@@ -97,7 +101,9 @@ class FMLayer(nn.Module):
 class DNNLayer(nn.Module):
     """Configurable MLP tower with BatchNorm, ReLU, and Dropout."""
 
-    def __init__(self, input_dim: int, layer_sizes: list[int] | None = None, dropout: float = 0.3) -> None:
+    def __init__(
+        self, input_dim: int, layer_sizes: list[int] | None = None, dropout: float = 0.3
+    ) -> None:
         super().__init__()
         if layer_sizes is None:
             layer_sizes = [256, 128, 64]
@@ -141,14 +147,18 @@ class DeepFM(nn.Module):
         nn.init.xavier_uniform_(self.dense_linear.weight)
         nn.init.zeros_(self.dense_linear.bias)
 
-        common_embed_dim = next(iter(self.embedding_layer.embedding_dims.values())) if self.sparse_features else 0
+        common_embed_dim = (
+            next(iter(self.embedding_layer.embedding_dims.values())) if self.sparse_features else 0
+        )
         dnn_input_dim = len(self.dense_features) + len(self.sparse_features) * common_embed_dim
         self.dnn_layer = DNNLayer(input_dim=dnn_input_dim, layer_sizes=dnn_layers, dropout=dropout)
         self.dnn_out_linear = nn.Linear(self.dnn_layer.output_dim, 1)
         nn.init.xavier_uniform_(self.dnn_out_linear.weight)
         nn.init.zeros_(self.dnn_out_linear.bias)
 
-    def forward(self, sparse_inputs: dict[str, torch.Tensor], dense_inputs: torch.Tensor) -> dict[str, torch.Tensor]:
+    def forward(
+        self, sparse_inputs: dict[str, torch.Tensor], dense_inputs: torch.Tensor
+    ) -> dict[str, torch.Tensor]:
         if dense_inputs.dim() == 1:
             dense_inputs = dense_inputs.unsqueeze(0)
 

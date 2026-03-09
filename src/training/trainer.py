@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.metrics import log_loss, roc_auc_score
-from sklearn.utils import check_random_state
 from torch.utils.data import DataLoader, Dataset
 
 from src.config import MODELS_DIR
@@ -45,22 +44,35 @@ class AdClickDataset(Dataset):
         self.sparse_data = {}
         for name in self.sparse_features:
             self.sparse_data[name] = torch.as_tensor(
-                pd.to_numeric(self.frame[name], errors="coerce").fillna(0).astype(np.int64).to_numpy(),
+                pd.to_numeric(self.frame[name], errors="coerce")
+                .fillna(0)
+                .astype(np.int64)
+                .to_numpy(),
                 dtype=torch.long,
             )
 
         self.dense_matrix = torch.as_tensor(
-            self.frame[self.dense_features].apply(pd.to_numeric, errors="coerce").fillna(0.0).astype(np.float32).to_numpy(),
+            self.frame[self.dense_features]
+            .apply(pd.to_numeric, errors="coerce")
+            .fillna(0.0)
+            .astype(np.float32)
+            .to_numpy(),
             dtype=torch.float32,
         )
         self.labels = torch.as_tensor(
-            pd.to_numeric(self.frame[self.label_col], errors="coerce").fillna(0).astype(np.float32).to_numpy(),
+            pd.to_numeric(self.frame[self.label_col], errors="coerce")
+            .fillna(0)
+            .astype(np.float32)
+            .to_numpy(),
             dtype=torch.float32,
         ).unsqueeze(-1)
 
         if self.position_feature_name in self.frame.columns:
             self.position = torch.as_tensor(
-                pd.to_numeric(self.frame[self.position_feature_name], errors="coerce").fillna(1).astype(np.float32).to_numpy(),
+                pd.to_numeric(self.frame[self.position_feature_name], errors="coerce")
+                .fillna(1)
+                .astype(np.float32)
+                .to_numpy(),
                 dtype=torch.float32,
             ).unsqueeze(-1)
         else:
@@ -114,7 +126,11 @@ class Trainer:
         self.model = model
         self.feature_config = feature_config
         self.config = config or TrainerConfig()
-        self.device = torch.device(device) if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = (
+            torch.device(device)
+            if device
+            else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        )
         self.checkpoint_path = Path(checkpoint_path)
         self.history_path = Path(history_path)
 
@@ -216,7 +232,9 @@ class Trainer:
 
             losses.append(float(loss.detach().cpu().item()))
             all_probs.append(np.asarray(pred.detach().cpu().view(-1).tolist(), dtype=float))
-            all_labels.append(np.asarray(batch["label"].detach().cpu().view(-1).tolist(), dtype=float))
+            all_labels.append(
+                np.asarray(batch["label"].detach().cpu().view(-1).tolist(), dtype=float)
+            )
 
         return float(np.mean(losses)), np.concatenate(all_labels), np.concatenate(all_probs)
 
@@ -300,7 +318,9 @@ class Trainer:
             json.dump(self.history, f, indent=2)
         return self.history
 
-    def evaluate(self, eval_df: pd.DataFrame, bucket_features: list[str] | None = None) -> dict[str, Any]:
+    def evaluate(
+        self, eval_df: pd.DataFrame, bucket_features: list[str] | None = None
+    ) -> dict[str, Any]:
         ds = AdClickDataset(eval_df, self.feature_config)
         loader = DataLoader(
             ds,
@@ -334,14 +354,18 @@ class Trainer:
             # Dense numeric -> quartile buckets. Categorical -> per value (top 20).
             if pd.api.types.is_numeric_dtype(series):
                 buckets = pd.qcut(series.rank(method="first"), q=4, duplicates="drop")
-                tmp = frame.groupby(buckets)
+                tmp = frame.groupby(buckets, observed=False)
                 for bucket, sub in tmp:
-                    grouped[str(bucket)] = self._safe_auc(sub["_y_true"].to_numpy(), sub["_y_prob"].to_numpy())
+                    grouped[str(bucket)] = self._safe_auc(
+                        sub["_y_true"].to_numpy(), sub["_y_prob"].to_numpy()
+                    )
             else:
                 top_vals = series.astype(str).value_counts().head(20).index
                 for v in top_vals:
                     sub = frame[series.astype(str) == v]
-                    grouped[str(v)] = self._safe_auc(sub["_y_true"].to_numpy(), sub["_y_prob"].to_numpy())
+                    grouped[str(v)] = self._safe_auc(
+                        sub["_y_true"].to_numpy(), sub["_y_prob"].to_numpy()
+                    )
             bucket_auc[feat] = grouped
         metrics["bucket_auc"] = bucket_auc
         return metrics
@@ -375,4 +399,3 @@ class Trainer:
         self.model.load_state_dict(ckpt["model_state_dict"])
         self.best_val_auc = float(ckpt.get("best_val_auc", self.best_val_auc))
         self.best_epoch = int(ckpt.get("best_epoch", self.best_epoch))
-

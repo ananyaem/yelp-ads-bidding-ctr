@@ -5,17 +5,14 @@ from __future__ import annotations
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 if TYPE_CHECKING:
-    import torch
-    from torch.utils.data import DataLoader
+    pass
 
 
 @dataclass
@@ -137,13 +134,15 @@ class PositionDebiaser:
         device: Any = None,
     ) -> None:
         import torch
+
         self.model = model
         self.feature_config = feature_config
         self.scaler = scaler
         self.neutral_position = neutral_position
         self.device = (
-            torch.device(device) if device else
-            torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            torch.device(device)
+            if device
+            else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         )
         self.model.to(self.device)
 
@@ -160,6 +159,7 @@ class PositionDebiaser:
     ) -> np.ndarray:
         import torch
         from torch.utils.data import DataLoader
+
         from src.training.trainer import AdClickDataset, _collate_batch
 
         infer_df = feature_df.copy()

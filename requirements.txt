@@ -1,6 +1,6 @@
 torch
 pandas
-numpy
+numpy>=1.26,<2
 scikit-learn
 plotly
 streamlit

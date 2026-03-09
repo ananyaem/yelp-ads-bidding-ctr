@@ -20,6 +20,7 @@ def _safe_auc(y_true: np.ndarray, y_prob: np.ndarray) -> float:
 # NDCG for ranking quality
 # ---------------------------------------------------------------------------
 
+
 def dcg_at_k(relevance: np.ndarray, k: int) -> float:
     """Compute DCG@k from a relevance array (already sorted by model score)."""
     relevance = np.asarray(relevance, dtype=float)[:k]
@@ -66,9 +67,7 @@ def grouped_ndcg(
     for name, grp in df.groupby(group_col):
         if len(grp) < 2:
             continue
-        results[str(name)] = ndcg_at_k(
-            grp[label_col].to_numpy(), grp[score_col].to_numpy(), k=k
-        )
+        results[str(name)] = ndcg_at_k(grp[label_col].to_numpy(), grp[score_col].to_numpy(), k=k)
     if results:
         results["__mean__"] = float(np.mean(list(results.values())))
     else:
@@ -79,6 +78,7 @@ def grouped_ndcg(
 # ---------------------------------------------------------------------------
 # Per-segment AUC
 # ---------------------------------------------------------------------------
+
 
 def per_segment_auc(
     df: pd.DataFrame,
@@ -101,23 +101,20 @@ def per_segment_auc(
         except ValueError:
             return results
         for bucket, sub in df.groupby(buckets, observed=False):
-            results[str(bucket)] = _safe_auc(
-                sub[label_col].to_numpy(), sub[score_col].to_numpy()
-            )
+            results[str(bucket)] = _safe_auc(sub[label_col].to_numpy(), sub[score_col].to_numpy())
     else:
         top_vals = series.astype(str).value_counts().head(top_n).index
         for v in top_vals:
             sub = df[series.astype(str) == v]
             if len(sub) >= 10:
-                results[str(v)] = _safe_auc(
-                    sub[label_col].to_numpy(), sub[score_col].to_numpy()
-                )
+                results[str(v)] = _safe_auc(sub[label_col].to_numpy(), sub[score_col].to_numpy())
     return results
 
 
 # ---------------------------------------------------------------------------
 # Per-segment calibration (ECE)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class SegmentCalibration:
@@ -149,32 +146,39 @@ def per_segment_ece(
             return results
         for bucket, sub in df.groupby(buckets, observed=False):
             rel = compute_ece(sub[label_col].to_numpy(), sub[score_col].to_numpy(), n_bins=n_bins)
-            results.append(SegmentCalibration(
-                segment=str(bucket),
-                ece=rel.ece,
-                mean_pred=float(sub[score_col].mean()),
-                mean_true=float(sub[label_col].mean()),
-                count=len(sub),
-            ))
+            results.append(
+                SegmentCalibration(
+                    segment=str(bucket),
+                    ece=rel.ece,
+                    mean_pred=float(sub[score_col].mean()),
+                    mean_true=float(sub[label_col].mean()),
+                    count=len(sub),
+                )
+            )
     else:
         top_vals = series.astype(str).value_counts().head(top_n).index
         for v in top_vals:
             sub = df[series.astype(str) == v]
             if len(sub) >= 50:
-                rel = compute_ece(sub[label_col].to_numpy(), sub[score_col].to_numpy(), n_bins=n_bins)
-                results.append(SegmentCalibration(
-                    segment=str(v),
-                    ece=rel.ece,
-                    mean_pred=float(sub[score_col].mean()),
-                    mean_true=float(sub[label_col].mean()),
-                    count=len(sub),
-                ))
+                rel = compute_ece(
+                    sub[label_col].to_numpy(), sub[score_col].to_numpy(), n_bins=n_bins
+                )
+                results.append(
+                    SegmentCalibration(
+                        segment=str(v),
+                        ece=rel.ece,
+                        mean_pred=float(sub[score_col].mean()),
+                        mean_true=float(sub[label_col].mean()),
+                        count=len(sub),
+                    )
+                )
     return results
 
 
 # ---------------------------------------------------------------------------
 # Revenue simulation for bidding strategies
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class RevenueResult:
@@ -253,6 +257,7 @@ def simulate_revenue(
 # Full evaluation report
 # ---------------------------------------------------------------------------
 
+
 def full_evaluation_report(
     df: pd.DataFrame,
     label_col: str = "click",
@@ -272,9 +277,7 @@ def full_evaluation_report(
     }
 
     if group_ndcg_col and group_ndcg_col in df.columns:
-        report["grouped_ndcg"] = grouped_ndcg(
-            df, group_ndcg_col, label_col, score_col, k=ndcg_k
-        )
+        report["grouped_ndcg"] = grouped_ndcg(df, group_ndcg_col, label_col, score_col, k=ndcg_k)
 
     segment_cols = segment_cols or []
     segment_auc: dict[str, dict[str, float]] = {}
@@ -285,7 +288,13 @@ def full_evaluation_report(
         segment_auc[col] = per_segment_auc(df, col, label_col, score_col)
         seg_cal = per_segment_ece(df, col, label_col, score_col)
         segment_calibration[col] = [
-            {"segment": s.segment, "ece": s.ece, "mean_pred": s.mean_pred, "mean_true": s.mean_true, "count": s.count}
+            {
+                "segment": s.segment,
+                "ece": s.ece,
+                "mean_pred": s.mean_pred,
+                "mean_true": s.mean_true,
+                "count": s.count,
+            }
             for s in seg_cal
         ]
 

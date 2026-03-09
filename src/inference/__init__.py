@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from src.inference.pipeline import InferencePipeline
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 __all__ = ["InferencePipeline"]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "InferencePipeline":
         from src.inference.pipeline import InferencePipeline
 

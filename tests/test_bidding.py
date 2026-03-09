@@ -5,18 +5,19 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
 from src.bidding.optimizer import BidOptimizer, BudgetPacer
 
 
 def _make_auction_df(n: int = 200, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
-    return pd.DataFrame({
-        "impression_id": [f"imp_{i}" for i in range(n)],
-        "y_prob": np.clip(rng.normal(0.06, 0.03, size=n), 0.001, 0.999),
-        "bid_amount": rng.lognormal(0.7, 0.5, size=n),
-        "click": rng.binomial(1, 0.06, size=n),
-    })
+    return pd.DataFrame(
+        {
+            "impression_id": [f"imp_{i}" for i in range(n)],
+            "y_prob": np.clip(rng.normal(0.06, 0.03, size=n), 0.001, 0.999),
+            "bid_amount": rng.lognormal(0.7, 0.5, size=n),
+            "click": rng.binomial(1, 0.06, size=n),
+        }
+    )
 
 
 def test_compute_bid_second_price() -> None:

@@ -58,8 +58,7 @@ class GSPAuction:
             if ctrs[i] <= 0:
                 ad = candidates[i]
                 logger.warning(
-                    "Skipping ad restaurant_id=%s campaign=%s: "
-                    "predicted_ctr=%.6f <= 0",
+                    "Skipping ad restaurant_id=%s campaign=%s: " "predicted_ctr=%.6f <= 0",
                     ad.get("restaurant_id"),
                     ad.get("campaign_id"),
                     float(ctrs[i]),
@@ -75,10 +74,7 @@ class GSPAuction:
         order = np.lexsort((vb, -scores))
         ranked_idx = valid_idx[order]
 
-        return [
-            {**candidates[int(i)], "rank_score": float(bids[i] * ctrs[i])}
-            for i in ranked_idx
-        ]
+        return [{**candidates[int(i)], "rank_score": float(bids[i] * ctrs[i])} for i in ranked_idx]
 
     def compute_prices(self, ranked_ads: list[dict]) -> list[float]:
         """GSP pricing for a ranked ad list.
@@ -91,12 +87,8 @@ class GSPAuction:
             return []
 
         n = len(ranked_ads)
-        rank_scores = np.array(
-            [float(ad["rank_score"]) for ad in ranked_ads], dtype=np.float64
-        )
-        ctrs = np.array(
-            [float(ad["predicted_ctr"]) for ad in ranked_ads], dtype=np.float64
-        )
+        rank_scores = np.array([float(ad["rank_score"]) for ad in ranked_ads], dtype=np.float64)
+        ctrs = np.array([float(ad["predicted_ctr"]) for ad in ranked_ads], dtype=np.float64)
         own_bids = np.array([float(ad["bid"]) for ad in ranked_ads], dtype=np.float64)
 
         raw = np.empty(n, dtype=np.float64)
@@ -123,9 +115,7 @@ class GSPAuction:
             campaign_budgets[k] = max(0.0, float(campaign_budgets[k]))
 
         return [
-            ad
-            for ad in ranked_ads
-            if campaign_budgets.get(ad["campaign_id"], float("inf")) > 0
+            ad for ad in ranked_ads if campaign_budgets.get(ad["campaign_id"], float("inf")) > 0
         ]
 
     def run_auction(
@@ -264,9 +254,8 @@ class AuctionSimulator:
         )
         summary["avg_cpc"] = summary["spend"] / summary["clicks"].clip(lower=1)
         summary["social_welfare"] = summary["revenue"]
-        summary["advertiser_roi"] = (
-            (summary["revenue"] - summary["spend"])
-            / summary["spend"].clip(lower=1e-9)
+        summary["advertiser_roi"] = (summary["revenue"] - summary["spend"]) / summary["spend"].clip(
+            lower=1e-9
         )
 
         return summary

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -191,16 +191,18 @@ class BidOptimizer:
             total_clicks += int(clicked)
             total_won += int(won)
 
-            results.append(BidResult(
-                impression_id=str(imp_ids[i]),
-                predicted_ctr=float(ctrs[i]),
-                expected_value=float(ctrs[i] * self.value_per_click),
-                bid=bid,
-                won=won,
-                cost=cost,
-                clicked=clicked,
-                profit=profit,
-            ))
+            results.append(
+                BidResult(
+                    impression_id=str(imp_ids[i]),
+                    predicted_ctr=float(ctrs[i]),
+                    expected_value=float(ctrs[i] * self.value_per_click),
+                    bid=bid,
+                    won=won,
+                    cost=cost,
+                    clicked=clicked,
+                    profit=profit,
+                )
+            )
 
         total_profit = total_revenue - total_cost
         summary = {

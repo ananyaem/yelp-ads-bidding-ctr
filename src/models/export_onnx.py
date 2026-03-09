@@ -60,8 +60,10 @@ def load_deepfm_from_checkpoint(
 
     fc = ckpt["feature_config"]
     inferred = _infer_dnn_layer_sizes(ckpt["model_state_dict"])
-    layers = dnn_layers if dnn_layers is not None else (
-        inferred if inferred else list(DEFAULT_HPARAMS.dnn_layers)
+    layers = (
+        dnn_layers
+        if dnn_layers is not None
+        else (inferred if inferred else list(DEFAULT_HPARAMS.dnn_layers))
     )
     dr = dropout if dropout is not None else DEFAULT_HPARAMS.dropout
     model = DeepFM(fc, dnn_layers=layers, dropout=dr)
@@ -146,12 +148,14 @@ def verify_onnx_matches_pytorch(
     onnx_out = session.run(
         None,
         {"sparse_flat": sparse_flat.astype(np.int64), "dense": dense},
-    )[0].reshape(-1)
+    )[
+        0
+    ].reshape(-1)
 
     max_diff = float(np.max(np.abs(torch_out - onnx_out)))
-    assert np.allclose(torch_out, onnx_out, atol=atol), (
-        f"ONNX mismatch: max_abs_diff={max_diff:.3e} (atol={atol})"
-    )
+    assert np.allclose(
+        torch_out, onnx_out, atol=atol
+    ), f"ONNX mismatch: max_abs_diff={max_diff:.3e} (atol={atol})"
 
 
 def main() -> None:

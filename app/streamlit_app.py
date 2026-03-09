@@ -131,9 +131,7 @@ def page_dashboard() -> None:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        fig1 = go.Figure(
-            data=go.Bar(x=ctr_c["cuisine"], y=ctr_c["ctr"], marker_color="#3498db")
-        )
+        fig1 = go.Figure(data=go.Bar(x=ctr_c["cuisine"], y=ctr_c["ctr"], marker_color="#3498db"))
         fig1.update_layout(
             title="CTR by cuisine",
             yaxis_tickformat=".1%",
@@ -258,7 +256,9 @@ def page_bid_optimizer() -> None:
     with c1:
         budget = st.number_input("Daily budget ($)", min_value=10.0, value=150.0, step=10.0)
     with c2:
-        cpa = st.number_input("CPA target / value per click ($)", min_value=0.5, value=4.0, step=0.5)
+        cpa = st.number_input(
+            "CPA target / value per click ($)", min_value=0.5, value=4.0, step=0.5
+        )
     with c3:
         duration = st.slider("Duration (rounds)", min_value=6, max_value=48, value=24)
 
@@ -417,9 +417,7 @@ def _feature_importance_figure(pipe) -> go.Figure | None:
         scores.append(float(abs(dl[i])))
 
     df = pd.DataFrame({"feature": names, "score": scores}).sort_values("score", ascending=True)
-    fig = go.Figure(
-        go.Bar(x=df["score"], y=df["feature"], orientation="h", marker_color="#16a085")
-    )
+    fig = go.Figure(go.Bar(x=df["score"], y=df["feature"], orientation="h", marker_color="#16a085"))
     fig.update_layout(title="Feature signal strength (embedding L2 / dense |weight|)", height=500)
     return fig
 

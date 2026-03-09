@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import pandas as pd
-
 from src.features.engineer import FeatureEngineer
 
 
@@ -53,13 +52,39 @@ def _build_review_df() -> pd.DataFrame:
     # User with >3 reviews: u1
     rows.extend(
         [
-            {"review_id": "r1", "user_id": "u1", "business_id": "b_jp_1", "stars": 5.0, "date": base_date},
-            {"review_id": "r2", "user_id": "u1", "business_id": "b_jp_2", "stars": 4.0, "date": base_date + pd.Timedelta(days=1)},
-            {"review_id": "r3", "user_id": "u1", "business_id": "b_jp_3", "stars": 4.0, "date": base_date + pd.Timedelta(days=2)},
+            {
+                "review_id": "r1",
+                "user_id": "u1",
+                "business_id": "b_jp_1",
+                "stars": 5.0,
+                "date": base_date,
+            },
+            {
+                "review_id": "r2",
+                "user_id": "u1",
+                "business_id": "b_jp_2",
+                "stars": 4.0,
+                "date": base_date + pd.Timedelta(days=1),
+            },
+            {
+                "review_id": "r3",
+                "user_id": "u1",
+                "business_id": "b_jp_3",
+                "stars": 4.0,
+                "date": base_date + pd.Timedelta(days=2),
+            },
         ]
     )
     # User with <3 reviews: u2
-    rows.append({"review_id": "r4", "user_id": "u2", "business_id": "b_jp_4", "stars": 3.0, "date": base_date + pd.Timedelta(days=3)})
+    rows.append(
+        {
+            "review_id": "r4",
+            "user_id": "u2",
+            "business_id": "b_jp_4",
+            "stars": 3.0,
+            "date": base_date + pd.Timedelta(days=3),
+        }
+    )
     return pd.DataFrame(rows)
 
 

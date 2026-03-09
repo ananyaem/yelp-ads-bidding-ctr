@@ -7,7 +7,6 @@ import json
 import tempfile
 from pathlib import Path
 
-from src.config import MODELS_DIR
 from src.inference.demo_assets import write_demo_artifacts
 from src.inference.pipeline import InferencePipeline, default_model_paths
 
@@ -56,7 +55,9 @@ def _format_listings(rows: list[dict]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run sponsored listing inference pipeline.")
-    parser.add_argument("--demo", action="store_true", help="Use synthetic checkpoint in a temp dir")
+    parser.add_argument(
+        "--demo", action="store_true", help="Use synthetic checkpoint in a temp dir"
+    )
     parser.add_argument("--model", type=Path, default=None)
     parser.add_argument("--engineer", type=Path, default=None)
     parser.add_argument("--platt", type=Path, default=None)

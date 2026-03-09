@@ -17,9 +17,24 @@ def write_demo_artifacts(root: Path) -> tuple[Path, Path, Path]:
     feature_config = {
         "cuisine": {"name": "cuisine", "type": "sparse", "vocab_size": 12, "embedding_dim": 8},
         "city": {"name": "city", "type": "sparse", "vocab_size": 8, "embedding_dim": 8},
-        "ad_position": {"name": "ad_position", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "bid_amount": {"name": "bid_amount", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "norm_rating": {"name": "norm_rating", "type": "dense", "vocab_size": None, "embedding_dim": 0},
+        "ad_position": {
+            "name": "ad_position",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
+        "bid_amount": {
+            "name": "bid_amount",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
+        "norm_rating": {
+            "name": "norm_rating",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
     }
     model = DeepFM(feature_config, dnn_layers=[32, 16], dropout=0.1)
     torch.manual_seed(0)

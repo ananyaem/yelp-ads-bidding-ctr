@@ -8,33 +8,57 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-
 from src.models.calibration import PlattScaler, PositionDebiaser, compute_ece
 from src.models.deepfm import DeepFM
 
 
 def _feature_config() -> dict:
     return {
-        "restaurant_cuisine": {"name": "restaurant_cuisine", "type": "sparse", "vocab_size": 10, "embedding_dim": 8},
-        "campaign_id": {"name": "campaign_id", "type": "sparse", "vocab_size": 5, "embedding_dim": 8},
-        "ad_position": {"name": "ad_position", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "bid_amount": {"name": "bid_amount", "type": "dense", "vocab_size": None, "embedding_dim": 0},
+        "restaurant_cuisine": {
+            "name": "restaurant_cuisine",
+            "type": "sparse",
+            "vocab_size": 10,
+            "embedding_dim": 8,
+        },
+        "campaign_id": {
+            "name": "campaign_id",
+            "type": "sparse",
+            "vocab_size": 5,
+            "embedding_dim": 8,
+        },
+        "ad_position": {
+            "name": "ad_position",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
+        "bid_amount": {
+            "name": "bid_amount",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
     }
 
 
 def _make_dummy_df(n: int = 200, position: float | None = None) -> pd.DataFrame:
     rng = np.random.RandomState(42)
-    df = pd.DataFrame({
-        "restaurant_cuisine": rng.randint(0, 10, n),
-        "campaign_id": rng.randint(0, 5, n),
-        "ad_position": position if position is not None else rng.randint(1, 11, n).astype(float),
-        "bid_amount": rng.lognormal(0.7, 0.5, n),
-        "click": rng.randint(0, 2, n),
-    })
+    df = pd.DataFrame(
+        {
+            "restaurant_cuisine": rng.randint(0, 10, n),
+            "campaign_id": rng.randint(0, 5, n),
+            "ad_position": (
+                position if position is not None else rng.randint(1, 11, n).astype(float)
+            ),
+            "bid_amount": rng.lognormal(0.7, 0.5, n),
+            "click": rng.randint(0, 2, n),
+        }
+    )
     return df
 
 
 # ---- PlattScaler tests ----
+
 
 def test_platt_scaler_output_in_0_1():
     rng = np.random.RandomState(0)
@@ -91,6 +115,7 @@ def test_platt_scaler_save_load():
 
 # ---- compute_ece tests ----
 
+
 def test_ece_perfect_calibration_is_zero():
     y_prob = np.array([0.1] * 100 + [0.9] * 100)
     y_true = np.array([0] * 90 + [1] * 10 + [0] * 10 + [1] * 90)
@@ -112,6 +137,7 @@ def test_ece_returns_bin_data():
 
 
 # ---- PositionDebiaser tests ----
+
 
 def test_position_debiaser_constant_across_positions():
     fc = _feature_config()
@@ -170,5 +196,6 @@ def test_position_debiaser_raw_model_varies_with_position():
                 all_p.append(out["prediction"].view(-1))
         means.append(torch.cat(all_p).mean().item())
 
-    assert not (abs(means[0] - means[1]) < 1e-6 and abs(means[1] - means[2]) < 1e-6), \
-        "Model should vary with position before debiasing"
+    assert not (
+        abs(means[0] - means[1]) < 1e-6 and abs(means[1] - means[2]) < 1e-6
+    ), "Model should vary with position before debiasing"

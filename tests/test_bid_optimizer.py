@@ -5,13 +5,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
 from src.auction.bid_optimizer import BudgetPacer, CampaignSimulator, OptimalBidder
-
 
 # ---------------------------------------------------------------------------
 # BudgetPacer
 # ---------------------------------------------------------------------------
+
 
 class TestBudgetPacer:
     def test_initial_multiplier_is_one(self) -> None:
@@ -51,7 +50,9 @@ class TestBudgetPacer:
             t = step / 24
             spend += float(rng.uniform(0.0, 8.0))
             pacer.update(actual_spend=spend, time_elapsed=t)
-            assert BudgetPacer.MIN_MULTIPLIER <= pacer.pacing_multiplier <= BudgetPacer.MAX_MULTIPLIER
+            assert (
+                BudgetPacer.MIN_MULTIPLIER <= pacer.pacing_multiplier <= BudgetPacer.MAX_MULTIPLIER
+            )
 
     def test_underspend_increases_multiplier(self) -> None:
         pacer = BudgetPacer(daily_budget=100.0, n_slots=10)
@@ -89,6 +90,7 @@ class TestBudgetPacer:
 # OptimalBidder
 # ---------------------------------------------------------------------------
 
+
 class TestOptimalBidder:
     def test_basic_bid(self) -> None:
         bidder = OptimalBidder()
@@ -97,9 +99,7 @@ class TestOptimalBidder:
 
     def test_bid_with_pacing(self) -> None:
         bidder = OptimalBidder()
-        bid = bidder.compute_bid(
-            value_per_click=5.0, predicted_ctr=0.10, pacing_multiplier=2.0
-        )
+        bid = bidder.compute_bid(value_per_click=5.0, predicted_ctr=0.10, pacing_multiplier=2.0)
         assert abs(bid - 1.0) < 1e-6
 
     def test_bid_floored_at_min(self) -> None:
@@ -109,9 +109,7 @@ class TestOptimalBidder:
 
     def test_bid_capped_at_max(self) -> None:
         bidder = OptimalBidder(max_bid=10.0)
-        bid = bidder.compute_bid(
-            value_per_click=100.0, predicted_ctr=0.50, pacing_multiplier=3.0
-        )
+        bid = bidder.compute_bid(value_per_click=100.0, predicted_ctr=0.50, pacing_multiplier=3.0)
         assert bid == pytest.approx(10.0)
 
     def test_bid_always_non_negative(self) -> None:
@@ -134,9 +132,7 @@ class TestOptimalBidder:
 
     def test_compute_bid_matches_value_formula(self) -> None:
         bidder = OptimalBidder()
-        bid = bidder.compute_bid(
-            value_per_click=4.0, predicted_ctr=0.12, pacing_multiplier=1.5
-        )
+        bid = bidder.compute_bid(value_per_click=4.0, predicted_ctr=0.12, pacing_multiplier=1.5)
         assert bid == pytest.approx(4.0 * 0.12 * 1.5)
 
     def test_bid_monotonic_in_ctr(self) -> None:
@@ -149,6 +145,7 @@ class TestOptimalBidder:
 # CampaignSimulator
 # ---------------------------------------------------------------------------
 
+
 class TestCampaignSimulator:
     def test_returns_trajectory_dataframe(self) -> None:
         sim = CampaignSimulator(n_rounds=5, impressions_per_round=10, seed=42)
@@ -156,9 +153,16 @@ class TestCampaignSimulator:
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 5
         for col in [
-            "round", "round_spend", "round_clicks", "round_impressions",
-            "total_spend", "total_clicks", "total_impressions",
-            "budget_utilization", "actual_CPA", "impression_share",
+            "round",
+            "round_spend",
+            "round_clicks",
+            "round_impressions",
+            "total_spend",
+            "total_clicks",
+            "total_impressions",
+            "budget_utilization",
+            "actual_CPA",
+            "impression_share",
             "pacing_multiplier",
         ]:
             assert col in df.columns
@@ -207,6 +211,7 @@ class TestCampaignSimulator:
 # ---------------------------------------------------------------------------
 # Acceptance criteria
 # ---------------------------------------------------------------------------
+
 
 class TestAcceptance:
     def test_default_simulation_meets_criteria(self) -> None:

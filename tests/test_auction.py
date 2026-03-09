@@ -7,12 +7,12 @@ import time
 import numpy as np
 import pandas as pd
 import pytest
-
 from src.auction.gsp import AuctionSimulator, GSPAuction
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _candidate(
     restaurant_id: str,
@@ -41,6 +41,7 @@ def _five_bidders() -> list[dict]:
 # ---------------------------------------------------------------------------
 # GSPAuction.rank_ads
 # ---------------------------------------------------------------------------
+
 
 class TestRankAds:
     def test_normal_ranking_order(self) -> None:
@@ -84,7 +85,7 @@ class TestRankAds:
         auction = GSPAuction()
         candidates = [
             _candidate("r_high_bid", bid=4.0, predicted_ctr=0.10, campaign_id="c1"),  # 0.40
-            _candidate("r_low_bid", bid=2.0, predicted_ctr=0.20, campaign_id="c2"),   # 0.40
+            _candidate("r_low_bid", bid=2.0, predicted_ctr=0.20, campaign_id="c2"),  # 0.40
         ]
         ranked = auction.rank_ads(candidates)
         assert ranked[0]["restaurant_id"] == "r_low_bid"
@@ -94,6 +95,7 @@ class TestRankAds:
 # ---------------------------------------------------------------------------
 # GSPAuction.compute_prices
 # ---------------------------------------------------------------------------
+
 
 class TestComputePrices:
     def test_five_bidders_prices(self) -> None:
@@ -111,9 +113,7 @@ class TestComputePrices:
 
     def test_single_bidder_pays_reserve(self) -> None:
         auction = GSPAuction(reserve_price=0.10)
-        ranked = auction.rank_ads(
-            [_candidate("r1", bid=5.0, predicted_ctr=0.20, campaign_id="c1")]
-        )
+        ranked = auction.rank_ads([_candidate("r1", bid=5.0, predicted_ctr=0.20, campaign_id="c1")])
         prices = auction.compute_prices(ranked)
         assert len(prices) == 1
         assert prices[0] == pytest.approx(0.10)
@@ -162,6 +162,7 @@ class TestComputePrices:
 # GSPAuction.apply_budget_constraints
 # ---------------------------------------------------------------------------
 
+
 class TestBudgetConstraints:
     def test_exhausted_campaign_removed(self) -> None:
         auction = GSPAuction()
@@ -183,10 +184,12 @@ class TestBudgetConstraints:
 
     def test_all_budgets_exhausted_returns_empty(self) -> None:
         auction = GSPAuction()
-        ranked = auction.rank_ads([
-            _candidate("r1", bid=2.0, predicted_ctr=0.10, campaign_id="c1"),
-            _candidate("r2", bid=3.0, predicted_ctr=0.20, campaign_id="c2"),
-        ])
+        ranked = auction.rank_ads(
+            [
+                _candidate("r1", bid=2.0, predicted_ctr=0.10, campaign_id="c1"),
+                _candidate("r2", bid=3.0, predicted_ctr=0.20, campaign_id="c2"),
+            ]
+        )
         budgets = {"c1": 0.0, "c2": 0.0}
         filtered = auction.apply_budget_constraints(ranked, budgets)
         assert filtered == []
@@ -195,6 +198,7 @@ class TestBudgetConstraints:
 # ---------------------------------------------------------------------------
 # GSPAuction.run_auction (integration)
 # ---------------------------------------------------------------------------
+
 
 class TestRunAuction:
     def test_run_auction_end_to_end(self) -> None:
@@ -214,6 +218,7 @@ class TestRunAuction:
 # AuctionSimulator
 # ---------------------------------------------------------------------------
 
+
 class TestAuctionSimulator:
     def test_basic_simulation(self) -> None:
         sim = AuctionSimulator(seed=42)
@@ -222,8 +227,16 @@ class TestAuctionSimulator:
 
         assert isinstance(summary, pd.DataFrame)
         assert not summary.empty
-        for col in ["campaign_id", "spend", "impressions", "clicks",
-                     "revenue", "avg_cpc", "social_welfare", "advertiser_roi"]:
+        for col in [
+            "campaign_id",
+            "spend",
+            "impressions",
+            "clicks",
+            "revenue",
+            "avg_cpc",
+            "social_welfare",
+            "advertiser_roi",
+        ]:
             assert col in summary.columns
 
     def test_deterministic_with_same_seed(self) -> None:
@@ -308,6 +321,7 @@ class TestAuctionSimulator:
 # Price verification: no winner pays more than their bid
 # ---------------------------------------------------------------------------
 
+
 class TestPriceNeverExceedsBid:
     def test_across_many_random_auctions(self) -> None:
         rng = np.random.default_rng(123)
@@ -335,6 +349,7 @@ class TestPriceNeverExceedsBid:
 # ---------------------------------------------------------------------------
 # Performance: 10K requests in < 30 seconds
 # ---------------------------------------------------------------------------
+
 
 class TestPerformance:
     def test_10k_requests_under_30s(self) -> None:

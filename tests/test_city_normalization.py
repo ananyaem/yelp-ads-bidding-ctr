@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pandas as pd
-
 from src.data.yelp_parser import CITY_ALIASES, normalize_city_names
 
 

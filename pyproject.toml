@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yelp-ads-bidding-ctr"
+version = "0.1.0"
+description = "Yelp ads CTR prediction, GSP auction simulation, and bid optimization"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=4",
+    "ruff>=0.6",
+    "black>=24",
+    "jupyter",
+    "nbconvert>=7",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+]
+filterwarnings = [
+    "ignore:Failed to initialize NumPy:UserWarning",
+    "ignore:OOV indices detected:RuntimeWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/data/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "app"]
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]

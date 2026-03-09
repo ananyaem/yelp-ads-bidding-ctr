@@ -88,9 +88,7 @@ class BudgetPacer:
         rate_ratio = required_rate / ideal_rate
         target = self.pacing_multiplier * rate_ratio
 
-        self.pacing_multiplier = (
-            self.alpha * target + (1.0 - self.alpha) * self.pacing_multiplier
-        )
+        self.pacing_multiplier = self.alpha * target + (1.0 - self.alpha) * self.pacing_multiplier
         self.pacing_multiplier = float(
             np.clip(self.pacing_multiplier, self.MIN_MULTIPLIER, self.MAX_MULTIPLIER)
         )
@@ -226,9 +224,7 @@ class CampaignSimulator:
                         0.50,
                     )
                 )
-                our_bid = bidder.compute_bid(
-                    self.value_per_click, our_ctr, pacer.pacing_multiplier
-                )
+                our_bid = bidder.compute_bid(self.value_per_click, our_ctr, pacer.pacing_multiplier)
 
                 candidates: list[dict] = [
                     {
@@ -241,9 +237,7 @@ class CampaignSimulator:
 
                 for j in range(self.n_competitors):
                     comp_vpc = rng.uniform(4.0, 6.0)
-                    comp_ctr = float(
-                        np.clip(rng.normal(0.075, 0.02), 0.005, 0.50)
-                    )
+                    comp_ctr = float(np.clip(rng.normal(0.075, 0.02), 0.005, 0.50))
                     comp_bid = float(np.clip(comp_vpc * comp_ctr, 0.05, 8.0))
                     candidates.append(
                         {

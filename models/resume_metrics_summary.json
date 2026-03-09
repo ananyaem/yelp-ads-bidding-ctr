@@ -1,0 +1,8 @@
+{
+  "source_notebook": "notebooks/04_deepfm_training.ipynb",
+  "section": "Baseline comparison (DeepFM vs logistic regression, same test split)",
+  "lr_test_auc": 0.7777777777777778,
+  "deepfm_test_auc": 0.8034,
+  "deepfm_minus_lr_auc": 0.0256222222222222,
+  "notes": "deepfm_test_auc rounded to 4 decimals as displayed in the notebook summary table; LR AUC from sklearn on one-hot encoded features."
+}

@@ -10,7 +10,6 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-
 from src.inference.demo_assets import write_demo_artifacts
 from src.inference.pipeline import InferencePipeline
 from src.models.export_onnx import verify_onnx_matches_pytorch
@@ -51,9 +50,7 @@ def test_pipeline_empty_candidates():
         root = Path(td)
         ckpt, pp, _ = _save_demo_bundle(root)
         pipe = InferencePipeline(model_path=ckpt, engineer_path=None, platt_path=pp)
-        out = pipe.get_sponsored_listings(
-            {"user_id": "u1"}, {"timestamp": "2024-01-01"}, []
-        )
+        out = pipe.get_sponsored_listings({"user_id": "u1"}, {"timestamp": "2024-01-01"}, [])
         assert out == []
 
 
@@ -107,7 +104,9 @@ def test_pipeline_runs_gsp_ranking():
                 "norm_rating": 0.5,
             },
         ]
-        out = pipe.get_sponsored_listings({"user_id": "u1"}, {"timestamp": "2024-01-01 12:00:00"}, cands)
+        out = pipe.get_sponsored_listings(
+            {"user_id": "u1"}, {"timestamp": "2024-01-01 12:00:00"}, cands
+        )
         assert len(out) == 2
         assert {o["position"] for o in out} == {1, 2}
         for o in out:
@@ -131,7 +130,9 @@ def test_pipeline_onnx_path_matches_torch():
                 "norm_rating": 0.7,
             }
         ]
-        pt_pipe = InferencePipeline(model_path=ckpt, engineer_path=None, platt_path=pp, use_onnx=False)
+        pt_pipe = InferencePipeline(
+            model_path=ckpt, engineer_path=None, platt_path=pp, use_onnx=False
+        )
         ort_pipe = InferencePipeline(
             model_path=ckpt,
             engineer_path=None,

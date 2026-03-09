@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-
 from src.models.evaluation import (
     dcg_at_k,
     full_evaluation_report,
@@ -20,15 +19,17 @@ def _make_eval_df(n: int = 500, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     clicks = rng.binomial(1, 0.06, size=n)
     probs = np.clip(clicks * 0.5 + rng.normal(0.06, 0.03, size=n), 0.001, 0.999)
-    return pd.DataFrame({
-        "impression_id": [f"imp_{i}" for i in range(n)],
-        "click": clicks,
-        "y_prob": probs,
-        "bid_amount": rng.lognormal(0.7, 0.5, size=n),
-        "restaurant_cuisine": rng.choice(["Italian", "Japanese", "Mexican", "Other"], size=n),
-        "campaign_id": rng.integers(0, 5, size=n),
-        "ad_position": rng.integers(1, 11, size=n),
-    })
+    return pd.DataFrame(
+        {
+            "impression_id": [f"imp_{i}" for i in range(n)],
+            "click": clicks,
+            "y_prob": probs,
+            "bid_amount": rng.lognormal(0.7, 0.5, size=n),
+            "restaurant_cuisine": rng.choice(["Italian", "Japanese", "Mexican", "Other"], size=n),
+            "campaign_id": rng.integers(0, 5, size=n),
+            "ad_position": rng.integers(1, 11, size=n),
+        }
+    )
 
 
 def test_dcg_at_k_perfect_ranking() -> None:

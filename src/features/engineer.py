@@ -86,7 +86,7 @@ class _DataFrameSchemaValidator(BaseModel):
     spec: _SchemaSpec
 
     @model_validator(mode="after")
-    def _validate(self) -> "_DataFrameSchemaValidator":
+    def _validate(self) -> _DataFrameSchemaValidator:
         missing = [c for c in self.spec.required_columns if c not in self.columns]
         if missing:
             raise ValueError(f"{self.frame_name}: missing required columns: {missing}")
@@ -111,7 +111,9 @@ class _DataFrameSchemaValidator(BaseModel):
 class FeatureEngineer:
     """Builds restaurant/user/context features and model-ready metadata."""
 
-    def __init__(self, rare_cuisine_threshold: int = 50, embedding_dim: int = DEFAULT_HPARAMS.embedding_dim) -> None:
+    def __init__(
+        self, rare_cuisine_threshold: int = 50, embedding_dim: int = DEFAULT_HPARAMS.embedding_dim
+    ) -> None:
         self.rare_cuisine_threshold = rare_cuisine_threshold
         self.embedding_dim = embedding_dim
 
@@ -144,7 +146,9 @@ class FeatureEngineer:
         except ValidationError as exc:
             raise ValueError(f"{frame_name} schema validation failed: {exc}") from exc
 
-    def fit(self, business_df: pd.DataFrame, review_df: pd.DataFrame, user_df: pd.DataFrame) -> "FeatureEngineer":
+    def fit(
+        self, business_df: pd.DataFrame, review_df: pd.DataFrame, user_df: pd.DataFrame
+    ) -> FeatureEngineer:
         """Fit feature mappings and scaler using train split only."""
         business_spec = _SchemaSpec(
             required_columns=["business_id", "city", "categories", "stars", "review_count"],
@@ -191,13 +195,19 @@ class FeatureEngineer:
 
         cuisine_counts = biz["primary_cuisine_raw"].value_counts()
         rare_cuisines = set(cuisine_counts[cuisine_counts < self.rare_cuisine_threshold].index)
-        biz["primary_cuisine"] = biz["primary_cuisine_raw"].apply(lambda x: "Other" if x in rare_cuisines else x)
+        biz["primary_cuisine"] = biz["primary_cuisine_raw"].apply(
+            lambda x: "Other" if x in rare_cuisines else x
+        )
 
         city_avg_stars = biz.groupby("city")["stars"].mean().to_dict()
-        biz["rating_vs_city_avg"] = biz["stars"] - biz["city"].map(city_avg_stars).fillna(biz["stars"].mean())
+        biz["rating_vs_city_avg"] = biz["stars"] - biz["city"].map(city_avg_stars).fillna(
+            biz["stars"].mean()
+        )
         biz["log_review_count"] = biz["review_count"].apply(_safe_log1p)
 
-        biz["price_range_raw"] = biz.get("attributes", pd.Series([None] * len(biz))).apply(_extract_price_range)
+        biz["price_range_raw"] = biz.get("attributes", pd.Series([None] * len(biz))).apply(
+            _extract_price_range
+        )
         biz["price_missing"] = biz["price_range_raw"].isna().astype(int)
 
         city_cuisine_price_med = (
@@ -205,7 +215,11 @@ class FeatureEngineer:
         )
         city_price_med = biz.groupby("city")["price_range_raw"].median().to_dict()
         cuisine_price_med = biz.groupby("primary_cuisine")["price_range_raw"].median().to_dict()
-        global_price_med = float(biz["price_range_raw"].median()) if not math.isnan(float(biz["price_range_raw"].median())) else 2.0
+        global_price_med = (
+            float(biz["price_range_raw"].median())
+            if not math.isnan(float(biz["price_range_raw"].median()))
+            else 2.0
+        )
 
         def _impute_price(row: pd.Series) -> float:
             val = row["price_range_raw"]
@@ -253,9 +267,13 @@ class FeatureEngineer:
         reference_ts = rev["date"].max() if not rev.empty else pd.Timestamp.utcnow()
         usr["account_age_years"] = (reference_ts - usr["yelping_since"]).dt.days / 365.25
 
-        user_features = usr[["user_id", "account_age_years"]].merge(user_agg, on="user_id", how="left")
+        user_features = usr[["user_id", "account_age_years"]].merge(
+            user_agg, on="user_id", how="left"
+        )
         user_features["review_count"] = user_features["review_count"].fillna(0).astype(int)
-        user_features["avg_rating_given"] = user_features["avg_rating_given"].fillna(float(rev["stars"].mean()) if not rev.empty else 3.5)
+        user_features["avg_rating_given"] = user_features["avg_rating_given"].fillna(
+            float(rev["stars"].mean()) if not rev.empty else 3.5
+        )
         user_features["log_review_count"] = user_features["log_review_count"].fillna(0.0)
 
         # Top cuisine preference from reviewed restaurants.
@@ -272,7 +290,9 @@ class FeatureEngineer:
             .drop_duplicates(subset=["user_id"], keep="first")
             .rename(columns={"primary_cuisine": "top_cuisine_preference"})
         )
-        user_features = user_features.merge(user_cuisine_pref[["user_id", "top_cuisine_preference"]], on="user_id", how="left")
+        user_features = user_features.merge(
+            user_cuisine_pref[["user_id", "top_cuisine_preference"]], on="user_id", how="left"
+        )
 
         # Build per-business map.
         for row in biz.itertuples(index=False):
@@ -293,7 +313,9 @@ class FeatureEngineer:
                 "account_age_years": float(row.account_age_years),
                 "review_count": int(row.review_count),
                 "top_cuisine_preference": (
-                    str(row.top_cuisine_preference) if pd.notna(row.top_cuisine_preference) else None
+                    str(row.top_cuisine_preference)
+                    if pd.notna(row.top_cuisine_preference)
+                    else None
                 ),
             }
 
@@ -304,11 +326,20 @@ class FeatureEngineer:
         self.cuisine_to_idx = {v: i for i, v in enumerate(cuisines)}
         self.city_to_idx = {v: i for i, v in enumerate(cities)}
         self.top_cuisine_to_idx = {v: i for i, v in enumerate(top_cuisine_vocab)}
-        self.time_of_day_to_idx = {v: i for i, v in enumerate(["morning", "lunch", "evening", "night", "late_night"])}
-        self.day_of_week_to_idx = {v: i for i, v in enumerate(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])}
+        self.time_of_day_to_idx = {
+            v: i for i, v in enumerate(["morning", "lunch", "evening", "night", "late_night"])
+        }
+        self.day_of_week_to_idx = {
+            v: i
+            for i, v in enumerate(
+                ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            )
+        }
 
         # Fit scaler using train interactions.
-        train_features = self.transform(rev[["review_id", "user_id", "business_id", "date"]], fit_mode=True)
+        train_features = self.transform(
+            rev[["review_id", "user_id", "business_id", "date"]], fit_mode=True
+        )
         dense_cols = [
             "rating_vs_city_avg",
             "restaurant_log_review_count",
@@ -333,7 +364,11 @@ class FeatureEngineer:
 
         spec = _SchemaSpec(
             required_columns=["user_id", "business_id", "date"],
-            required_dtypes={"user_id": ("object", "string"), "business_id": ("object", "string"), "date": ("datetime", "object", "string")},
+            required_dtypes={
+                "user_id": ("object", "string"),
+                "business_id": ("object", "string"),
+                "date": ("datetime", "object", "string"),
+            },
             no_nan_columns=["user_id", "business_id", "date"],
         )
         self._validate_df(interactions_df, "interactions_df", spec)
@@ -390,10 +425,16 @@ class FeatureEngineer:
                     "user_id": row.user_id,
                     "business_id": row.business_id,
                     "date": row.date,
-                    "primary_cuisine": self.cuisine_to_idx.get(primary_cuisine, self.cuisine_to_idx.get("Other", 0)),
+                    "primary_cuisine": self.cuisine_to_idx.get(
+                        primary_cuisine, self.cuisine_to_idx.get("Other", 0)
+                    ),
                     "city_encoded": self.city_to_idx.get(city, self.city_to_idx.get("Unknown", 0)),
-                    "top_cuisine_preference": self.top_cuisine_to_idx.get(top_cuisine_pref, self.top_cuisine_to_idx.get("Other", 0)),
-                    "time_of_day": self.time_of_day_to_idx.get(time_bucket, self.time_of_day_to_idx["late_night"]),
+                    "top_cuisine_preference": self.top_cuisine_to_idx.get(
+                        top_cuisine_pref, self.top_cuisine_to_idx.get("Other", 0)
+                    ),
+                    "time_of_day": self.time_of_day_to_idx.get(
+                        time_bucket, self.time_of_day_to_idx["late_night"]
+                    ),
                     "day_of_week": self.day_of_week_to_idx.get(day_name, 0),
                     "is_weekend": is_weekend,
                     "rating_vs_city_avg": float(biz_feat["rating_vs_city_avg"]),
@@ -452,14 +493,54 @@ class FeatureEngineer:
                 "vocab_size": int(len(self.day_of_week_to_idx)),
                 "embedding_dim": int(self.embedding_dim),
             },
-            "rating_vs_city_avg": {"name": "rating_vs_city_avg", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "restaurant_log_review_count": {"name": "restaurant_log_review_count", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "price_range": {"name": "price_range", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "price_missing": {"name": "price_missing", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "avg_rating_given": {"name": "avg_rating_given", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "user_log_review_count": {"name": "user_log_review_count", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "account_age_years": {"name": "account_age_years", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-            "is_weekend": {"name": "is_weekend", "type": "dense", "vocab_size": None, "embedding_dim": 0},
+            "rating_vs_city_avg": {
+                "name": "rating_vs_city_avg",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "restaurant_log_review_count": {
+                "name": "restaurant_log_review_count",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "price_range": {
+                "name": "price_range",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "price_missing": {
+                "name": "price_missing",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "avg_rating_given": {
+                "name": "avg_rating_given",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "user_log_review_count": {
+                "name": "user_log_review_count",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "account_age_years": {
+                "name": "account_age_years",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
+            "is_weekend": {
+                "name": "is_weekend",
+                "type": "dense",
+                "vocab_size": None,
+                "embedding_dim": 0,
+            },
         }
         return config
 
@@ -480,20 +561,22 @@ class FeatureEngineer:
         biz_rows: list[dict[str, Any]] = []
         for bid in out["business_id"]:
             feat = self.business_feature_map.get(bid, {})
-            biz_rows.append({
-                "fe_rating_vs_city_avg": feat.get("rating_vs_city_avg", 0.0),
-                "fe_restaurant_log_review_count": feat.get("log_review_count", 0.0),
-                "fe_price_range": feat.get("price_range", 2.0),
-                "fe_price_missing": feat.get("price_missing", 1),
-                "fe_primary_cuisine_idx": self.cuisine_to_idx.get(
-                    feat.get("primary_cuisine", "Other"),
-                    self.cuisine_to_idx.get("Other", 0),
-                ),
-                "fe_city_idx": self.city_to_idx.get(
-                    feat.get("city", "Unknown"),
-                    self.city_to_idx.get("Unknown", 0),
-                ),
-            })
+            biz_rows.append(
+                {
+                    "fe_rating_vs_city_avg": feat.get("rating_vs_city_avg", 0.0),
+                    "fe_restaurant_log_review_count": feat.get("log_review_count", 0.0),
+                    "fe_price_range": feat.get("price_range", 2.0),
+                    "fe_price_missing": feat.get("price_missing", 1),
+                    "fe_primary_cuisine_idx": self.cuisine_to_idx.get(
+                        feat.get("primary_cuisine", "Other"),
+                        self.cuisine_to_idx.get("Other", 0),
+                    ),
+                    "fe_city_idx": self.city_to_idx.get(
+                        feat.get("city", "Unknown"),
+                        self.city_to_idx.get("Unknown", 0),
+                    ),
+                }
+            )
         biz_feat_df = pd.DataFrame(biz_rows, index=out.index)
 
         user_rows: list[dict[str, Any]] = []
@@ -505,12 +588,14 @@ class FeatureEngineer:
             else:
                 pref_idx = self.top_cuisine_to_idx.get("Other", 0)
 
-            user_rows.append({
-                "fe_avg_rating_given": feat.get("avg_rating_given", 3.5),
-                "fe_user_log_review_count": feat.get("log_review_count", 0.0),
-                "fe_account_age_years": feat.get("account_age_years", 0.0),
-                "fe_top_cuisine_preference_idx": pref_idx,
-            })
+            user_rows.append(
+                {
+                    "fe_avg_rating_given": feat.get("avg_rating_given", 3.5),
+                    "fe_user_log_review_count": feat.get("log_review_count", 0.0),
+                    "fe_account_age_years": feat.get("account_age_years", 0.0),
+                    "fe_top_cuisine_preference_idx": pref_idx,
+                }
+            )
         user_feat_df = pd.DataFrame(user_rows, index=out.index)
 
         for col in biz_feat_df.columns:
@@ -533,7 +618,7 @@ class FeatureEngineer:
         return target
 
     @staticmethod
-    def load(path: str | Path) -> "FeatureEngineer":
+    def load(path: str | Path) -> FeatureEngineer:
         with Path(path).open("rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, FeatureEngineer):

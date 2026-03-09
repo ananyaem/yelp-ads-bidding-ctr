@@ -1,24 +1,53 @@
 from __future__ import annotations
 
 import torch
-
 from src.models.deepfm import DeepFM
 
 
 def _feature_config() -> dict:
     return {
-        "primary_cuisine": {"name": "primary_cuisine", "type": "sparse", "vocab_size": 20, "embedding_dim": 8},
-        "city_encoded": {"name": "city_encoded", "type": "sparse", "vocab_size": 10, "embedding_dim": 8},
-        "time_of_day": {"name": "time_of_day", "type": "sparse", "vocab_size": 5, "embedding_dim": 8},
-        "rating_vs_city_avg": {"name": "rating_vs_city_avg", "type": "dense", "vocab_size": None, "embedding_dim": 0},
+        "primary_cuisine": {
+            "name": "primary_cuisine",
+            "type": "sparse",
+            "vocab_size": 20,
+            "embedding_dim": 8,
+        },
+        "city_encoded": {
+            "name": "city_encoded",
+            "type": "sparse",
+            "vocab_size": 10,
+            "embedding_dim": 8,
+        },
+        "time_of_day": {
+            "name": "time_of_day",
+            "type": "sparse",
+            "vocab_size": 5,
+            "embedding_dim": 8,
+        },
+        "rating_vs_city_avg": {
+            "name": "rating_vs_city_avg",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
         "restaurant_log_review_count": {
             "name": "restaurant_log_review_count",
             "type": "dense",
             "vocab_size": None,
             "embedding_dim": 0,
         },
-        "price_range": {"name": "price_range", "type": "dense", "vocab_size": None, "embedding_dim": 0},
-        "price_missing": {"name": "price_missing", "type": "dense", "vocab_size": None, "embedding_dim": 0},
+        "price_range": {
+            "name": "price_range",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
+        "price_missing": {
+            "name": "price_missing",
+            "type": "dense",
+            "vocab_size": None,
+            "embedding_dim": 0,
+        },
     }
 
 
@@ -55,7 +84,9 @@ def test_gradient_flows_all_parameters():
     loss = out["prediction"].mean()
     loss.backward()
 
-    missing_grad = [name for name, p in model.named_parameters() if p.requires_grad and p.grad is None]
+    missing_grad = [
+        name for name, p in model.named_parameters() if p.requires_grad and p.grad is None
+    ]
     assert not missing_grad, f"Parameters with no gradient: {missing_grad}"
 
 
