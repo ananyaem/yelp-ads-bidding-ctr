@@ -210,3 +210,7 @@ __marimo__/
 
 # Data artifacts
 *.parquet
+
+# Model checkpoints and pickles (train/export locally; do not commit binaries)
+*.pt
+*.pkl

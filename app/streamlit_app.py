@@ -47,6 +47,15 @@ TIME_SLOTS = {
 }
 
 
+def _plotly(fig: go.Figure, *, height: int = 400) -> None:
+    """Render Plotly with explicit size and native Plotly theming.
+
+    Streamlit 1.5x defaults to applying the Streamlit chart theme and content-sized
+    height on ``st.plotly_chart``, which can produce invisible charts in some setups.
+    """
+    st.plotly_chart(fig, width="stretch", height=height, theme=None)
+
+
 @st.cache_resource
 def load_inference_bundle():
     """Load production checkpoint if possible; otherwise materialize demo assets once."""
@@ -138,7 +147,7 @@ def page_dashboard() -> None:
             height=400,
             margin=dict(t=50, b=80),
         )
-        st.plotly_chart(fig1, use_container_width=True)
+        _plotly(fig1, height=400)
     with col_b:
         fig2 = go.Figure(
             data=go.Bar(
@@ -152,7 +161,7 @@ def page_dashboard() -> None:
             height=400,
             margin=dict(t=50, b=80),
         )
-        st.plotly_chart(fig2, use_container_width=True)
+        _plotly(fig2, height=400)
 
     fig3 = go.Figure(
         data=go.Bar(
@@ -167,7 +176,7 @@ def page_dashboard() -> None:
         height=380,
         margin=dict(l=120, t=50),
     )
-    st.plotly_chart(fig3, use_container_width=True)
+    _plotly(fig3, height=380)
 
 
 def _auction_candidates(
@@ -200,11 +209,16 @@ def page_auction() -> None:
     pipe, msg = load_inference_bundle()
     st.caption(msg)
 
-    with st.sidebar:
-        st.subheader("User profile")
-        cuisine_pref = st.selectbox("Cuisine preference", CUISINE_LABELS, index=0)
-        city = st.selectbox("City", CITY_LABELS, index=0)
-        tod = st.selectbox("Time of day", list(TIME_SLOTS.keys()), index=2)
+    # Keep controls in the main pane: nested ``st.sidebar`` inside page callbacks
+    # can interact badly with the nav sidebar on some Streamlit versions.
+    with st.expander("User profile", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            cuisine_pref = st.selectbox("Cuisine preference", CUISINE_LABELS, index=0)
+        with c2:
+            city = st.selectbox("City", CITY_LABELS, index=0)
+        with c3:
+            tod = st.selectbox("Time of day", list(TIME_SLOTS.keys()), index=2)
         run = st.button("Run auction", type="primary")
 
     if pipe is None:
@@ -247,7 +261,7 @@ def page_auction() -> None:
             use_container_width=True,
         )
     else:
-        st.info("Set profile options in the sidebar and click **Run auction**.")
+        st.info("Adjust **User profile** above and click **Run auction**.")
 
 
 def page_bid_optimizer() -> None:
@@ -295,7 +309,7 @@ def page_bid_optimizer() -> None:
             height=400,
             yaxis_range=[0, 105],
         )
-        st.plotly_chart(fig, use_container_width=True)
+        _plotly(fig, height=400)
 
 
 def _calibration_figure() -> go.Figure:
@@ -428,7 +442,7 @@ def page_explorer() -> None:
     st.caption(msg)
 
     st.subheader("Calibration (reliability)")
-    st.plotly_chart(_calibration_figure(), use_container_width=True)
+    _plotly(_calibration_figure(), height=420)
     st.caption(
         "Synthetic validation sample: **lower ECE after Platt** indicates better alignment "
         "between predicted probability and observed click rate."
@@ -437,14 +451,14 @@ def page_explorer() -> None:
     st.subheader("Restaurant / cuisine embeddings (t-SNE)")
     tsne_fig = _embedding_tsne_figure(pipe)
     if tsne_fig is not None:
-        st.plotly_chart(tsne_fig, use_container_width=True)
+        _plotly(tsne_fig, height=450)
     else:
         st.warning("t-SNE unavailable (no model or sklearn missing).")
 
     st.subheader("Feature importance (proxy)")
     fi_fig = _feature_importance_figure(pipe)
     if fi_fig is not None:
-        st.plotly_chart(fi_fig, use_container_width=True)
+        _plotly(fi_fig, height=500)
     else:
         st.warning("Feature importance unavailable without a loaded model.")
 
@@ -456,11 +470,11 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
+    st.title("Yelp Ads Lab")
     st.sidebar.title("Navigation")
     page = st.sidebar.radio(
-        "Page",
+        "Go to",
         ["Dashboard", "Auction Simulator", "Bid Optimizer", "Model Explorer"],
-        label_visibility="collapsed",
     )
 
     if page == "Dashboard":

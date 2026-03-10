@@ -2,13 +2,13 @@
   "restaurant_city": {
     "name": "restaurant_city",
     "type": "sparse",
-    "vocab_size": 859,
+    "vocab_size": 833,
     "embedding_dim": 8
   },
   "restaurant_cuisine": {
     "name": "restaurant_cuisine",
     "type": "sparse",
-    "vocab_size": 321,
+    "vocab_size": 311,
     "embedding_dim": 8
   },
   "campaign_id": {
@@ -20,13 +20,13 @@
   "campaign_city": {
     "name": "campaign_city",
     "type": "sparse",
-    "vocab_size": 80,
+    "vocab_size": 83,
     "embedding_dim": 8
   },
   "campaign_cuisine": {
     "name": "campaign_cuisine",
     "type": "sparse",
-    "vocab_size": 55,
+    "vocab_size": 56,
     "embedding_dim": 8
   },
   "time_of_day": {
@@ -61,6 +61,12 @@
   },
   "price_distance": {
     "name": "price_distance",
+    "type": "dense",
+    "vocab_size": null,
+    "embedding_dim": 0
+  },
+  "cuisine_match": {
+    "name": "cuisine_match",
     "type": "dense",
     "vocab_size": null,
     "embedding_dim": 0
